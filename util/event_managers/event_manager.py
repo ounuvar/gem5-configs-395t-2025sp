@@ -10,6 +10,8 @@ import m5
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 
+from util.string import vprint
+
 # The type of an event handler. Each time a handler is called, it generates
 # a bool which tells gem5 whether to stop the simulation.
 EventHandler = Generator[Optional[bool], None, None]
@@ -91,12 +93,18 @@ class EventTime:
 class EventCoordinator:
     """Manage multiple event managers for a simulator."""
 
-    def __init__(self, event_managers: List["EventManager"]):
+    def __init__(
+        self,
+        event_managers: List["EventManager"],
+        verbose: bool = False,
+    ):
         """Initialize the event coordinator.
 
         :param managers List of event managers to coordiante
+        :param verbose Whether to print verbose information
         """
-        self._managers: List[EventManager] = event_managers
+        self._managers: Final[List[EventManager]] = event_managers
+        self._verbose: Final[bool] = verbose
 
         # To be set in register()
         self._simulator: Optional[Simulator] = None
@@ -123,6 +131,7 @@ class EventCoordinator:
             ),
             ExitEvent.WORKBEGIN: self._handle_unscheduled(ExitEvent.WORKBEGIN),
             ExitEvent.WORKEND: self._handle_unscheduled(ExitEvent.WORKEND),
+            ExitEvent.EXIT: self._handle_unscheduled(ExitEvent.EXIT),
         }
 
     def register(self, simulator: Simulator) -> None:
@@ -130,6 +139,7 @@ class EventCoordinator:
 
         :param simulator The simulator to register
         """
+        vprint("Registering simulator")
         self._simulator = simulator
 
         # Register managers and get their handlers
@@ -143,6 +153,7 @@ class EventCoordinator:
     def reset_stats(self) -> None:
         """Reset the simulator's stats."""
         if self._simulator is None:
+            vprint("Can't reset stats, no simulator")
             return
 
         # Track total instructions and cycles
@@ -152,7 +163,18 @@ class EventCoordinator:
         self.total_instructions += int(stats["simInsts"].value)
         self.total_cycles += 0  # TODO: Implement cycles
 
+        vprint(f"Simulation instructions: {stats['simInsts'].value}")
+        vprint(f"Total instructions: {self.total_instructions}")
         m5.stats.reset()
+
+    def dump_stats(self) -> None:
+        """Dump the simulator's stats."""
+        if self._simulator is None:
+            vprint("Can't dump stats, no simulator")
+            return
+
+        vprint("Dumping stats")
+        m5.stats.dump()
 
     def get_current_time(self) -> EventTime:
         """Get the current time for this coordinator's simulator.
@@ -198,6 +220,9 @@ class EventCoordinator:
             ):
                 closest_event.tick = next_event.tick
 
+        vprint(f"Current time: {current_time}")
+        vprint(f"Next event time: {closest_event}")
+
         # Schedule the next event for each type
         if (
             closest_event.instruction is not None
@@ -221,8 +246,9 @@ class EventCoordinator:
         :yield True if the simulation should end, false otherwise
         """
         while True:
-            res: bool = False
             curr_time: EventTime = self.get_current_time()
+            res: bool = False
+            vprint(f"Current time: {curr_time}")
 
             # Loop through each event manager
             for manager_index in range(len(self._managers)):
@@ -251,6 +277,7 @@ class EventCoordinator:
             self._schedule()
 
             # Yield result
+            vprint("Ending simulation" if res else "Continuing simulation")
             yield res
 
     def _handle_unscheduled(self, event_type: ExitEvent) -> EventHandler:
@@ -260,6 +287,7 @@ class EventCoordinator:
         """
         while True:
             res: bool = False
+            vprint(f"Received event {event_type}")
 
             # Loop through each event manager
             for manager_index in range(len(self._managers)):
@@ -271,12 +299,13 @@ class EventCoordinator:
                     manager_res: Optional[bool] = next(
                         self._handlers[manager_index][event_type]  # type: ignore
                     )
-                    res = res | (manager_res or True)
+                    res = res | (True if manager_res is None else manager_res)
 
             # Schedule the next event
             self._schedule()
 
             # Yield result
+            vprint("Ending simulation" if res else "Continuing simulation")
             yield res
 
 
@@ -286,10 +315,13 @@ class EventManager(ABC):
     Child classes must implement get_event_handlers()
     """
 
-    def __init__(self):
-        """Initialize the event manager."""
+    def __init__(self, verbose: bool = False) -> None:
+        """Initialize the event manager.
+
+        :param verbose Whether to print verbose information"""
         self._coordinator: Optional[EventCoordinator] = None
         self._next_event: EventTime = EventTime()
+        self._verbose: Final[bool] = verbose
 
     @abstractmethod
     def get_event_handlers(self) -> EventHandlerDict:
@@ -335,6 +367,22 @@ class EventManager(ABC):
         :param simulator The simulator to register
         """
         self._coordinator = coordinator
+
+    def reset_stats(self) -> None:
+        """Reset the stats."""
+        if self._coordinator is None:
+            vprint("Can't reset stats, no coordinator")
+            return
+
+        self._coordinator.reset_stats()
+
+    def dump_stats(self) -> None:
+        """Dump the stats."""
+        if self._coordinator is None:
+            vprint("Can't dump stats, no coordinator")
+            return
+
+        self._coordinator.dump_stats()
 
     def switch_processor(self) -> None:
         """Switch the processor type, if using a switchable processor

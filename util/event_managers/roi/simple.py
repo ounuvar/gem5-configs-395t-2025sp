@@ -6,30 +6,25 @@ Handle ROIs in a simple manner.
   fast-forward processor
 """
 
-import m5
+from typing import override
+
 from gem5.simulate.exit_event import ExitEvent
+from termcolor import colored
 
 from util.event_managers.event_manager import (
     EventHandler,
     EventHandlerDict,
     EventManager,
+    EventTime,
 )
 
 
 class SimpleROIManager(EventManager):
-    def __init__(self) -> None:
-        """Initialize the SimpleROIManager."""
-        super().__init__()
+    def __init__(self, verbose: bool = False) -> None:
+        """Initialize the SimpleROIManager.
 
-    def get_event_handlers(self) -> EventHandlerDict:
-        """Get a dictionary of event types -> handlers.
-
-        :return A dictionary of this manager's event handlers
-        """
-        return {
-            ExitEvent.WORKBEGIN: self._handle_workbegin(),
-            ExitEvent.WORKEND: self._handle_workend(),
-        }
+        :param verbose: Whether to print verbose information"""
+        super().__init__(verbose=verbose)
 
     def _handle_workbegin(self) -> EventHandler:
         """Handle workbegin event, by switching to the timing processor
@@ -38,13 +33,24 @@ class SimpleROIManager(EventManager):
         :yield True if the simulation should end, false otherwise
         """
         while True:
-            print("***Switching to timing processor")
+            current_time: EventTime = self.get_current_time()
+            current_ins: int = current_time.instruction or 0
+
+            print(
+                colored(
+                    f"***instruction {current_ins:,}:",
+                    color="blue",
+                    attrs=["bold"],
+                ),
+                colored(
+                    "workbegin: Entering ROI, switching to detailed processor.",
+                    color="blue",
+                ),
+            )
+
             self.switch_processor()
-
-            print("===Entering ROI")
-            m5.stats.reset()
-
-            yield False
+            self.reset_stats()
+            yield False  # Continue simulation
 
     def _handle_workend(self) -> EventHandler:
         """Handle workend event, by switching to the fast-forward
@@ -53,11 +59,54 @@ class SimpleROIManager(EventManager):
         :yield True if the simulation should end, false otherwise
         """
         while True:
-            print("===Exiting ROI")
-            m5.stats.dump()
-            m5.stats.reset()
+            current_time: EventTime = self.get_current_time()
+            current_ins: int = current_time.instruction or 0
 
-            print("***Switching to fast-forward processor")
+            print(
+                colored(
+                    f"***Instruction instruction {current_ins:,}",
+                    color="blue",
+                    attrs=["bold"],
+                ),
+                colored(
+                    "workend: Exiting ROI, switching to fast-forward processor.",
+                    color="blue",
+                ),
+            )
+
+            self.dump_stats()
+            self.reset_stats()
             self.switch_processor()
+            yield False  # Continue simulation
 
-            yield False
+    def _handle_exit(self) -> EventHandler:
+        """Handle exit event, by ending the simulation.
+
+        :yield True if the simulation should end, false otherwise
+        """
+        current_time = self.get_current_time()
+        current_ins: int = current_time.instruction or 0
+
+        print(
+            colored(
+                f"***instruction {current_ins:,}:",
+                color="blue",
+                attrs=["bold"],
+            ),
+            colored("exit: Exiting simulation.", color="blue"),
+        )
+
+        self.dump_stats()
+        yield True
+
+    @override
+    def get_event_handlers(self) -> EventHandlerDict:
+        """Get a dictionary of event types -> handlers.
+
+        :return A dictionary of this manager's event handlers
+        """
+        return {
+            ExitEvent.WORKBEGIN: self._handle_workbegin(),
+            ExitEvent.WORKEND: self._handle_workend(),
+            ExitEvent.EXIT: self._handle_exit(),
+        }

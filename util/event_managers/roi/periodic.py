@@ -10,7 +10,7 @@ Handle ROIs in a sampled, periodic manner.
 """
 
 from enum import Enum
-from typing import Any, Final, Optional
+from typing import Any, Final, Optional, override
 
 import m5.stats
 from gem5.simulate.exit_event import ExitEvent
@@ -139,6 +139,7 @@ class PeriodicROIManager(EventManager):
         init_ff_interval: Optional[int] = None,
         num_rois: Optional[int] = None,
         continue_sim: Optional[bool] = None,
+        verbose: bool = False,
     ) -> None:
         """Initialize the PeriodicROIManager.
 
@@ -148,8 +149,9 @@ class PeriodicROIManager(EventManager):
         :param init_ff_interval The initial fast-forward interval, in instructions
         :param num_rois The number of ROIs to run
         :param continue_sim Whether to continue simulation after ROIs finish
+        :param verbose Whether to print verbose output
         """
-        super().__init__()
+        super().__init__(verbose=verbose)
 
         self._ff_interval: Final[int] = (
             ff_interval
@@ -442,7 +444,7 @@ class PeriodicROIManager(EventManager):
             self._current_phase = Phase.NO_WORK
             yield False  # Continue simulation
 
-    # @override
+    @override
     def get_event_handlers(self) -> EventHandlerDict:
         """Get dictionary of event types -> handlers.
 
