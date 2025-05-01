@@ -1,12 +1,14 @@
 """
-Sample SE config script to run a custom binary with a switchable CPU,
-running periodic fast-forward intervals in KVM then switching to an O3
-Skylake processor with a three-level classic cache hierarchy
+Sample FS config script to run multi-threaded GAP and Parsec benchmarks
+with a switchable CPU, booting the OS and running periodic fast-forward
+intervals in KVM then switching to an O3 Skylake processor with a
+three-level classic cache hierarchy
 """
 
 import time
 from typing import Final
 
+from gem5.components.boards.x86_board import X86Board
 from gem5.components.memory import DualChannelDDR4_2400
 from gem5.isas import ISA
 from gem5.simulate.simulator import Simulator
@@ -14,7 +16,6 @@ from gem5.utils.requires import requires
 from termcolor import colored
 
 import util.simarglib as simarglib
-from components.boards.custom_simple_board import CustomSimpleBoard
 from components.cache_hierarchies.three_level_classic import ThreeLevelClassicHierarchy
 from components.cpus.skylake_cpu import SkylakeCPU
 from components.processors.custom_x86_switchable_processor import (
@@ -22,7 +23,7 @@ from components.processors.custom_x86_switchable_processor import (
 )
 from util.event_managers.event_manager import EventCoordinator
 from util.event_managers.roi.periodic import PeriodicROIManager
-from workloads.se.custom_binary import CustomBinarySE
+from workloads.fs.gap_and_parsec import GapAndParsecFS
 
 requires(isa_required=ISA.X86)
 
@@ -41,27 +42,23 @@ cache_hierarchy = ThreeLevelClassicHierarchy()
 memory = DualChannelDDR4_2400(size="3GiB")
 
 # Create a board
-board = CustomSimpleBoard(
+board = X86Board(
+    clk_freq="3GHz",
     processor=processor,
     cache_hierarchy=cache_hierarchy,
     memory=memory,
 )
 
-# Create event manager and event coordinator
-#
-# This specific event manager, PeriodicROIManager, handles the
-# fast-forward, warmup, and simulation intervals / regions of interest.
-#
-# The coordinator manages one or more event managers to ensure multiple
-# event managers can work together smoothly.
+# Create ROI managers
 roi_manager = PeriodicROIManager(verbose=verbose)
 coordinator = EventCoordinator([roi_manager], verbose=verbose)
 
 # Set up the workload
-workload = CustomBinarySE()
+workload = GapAndParsecFS()
 board.set_workload(workload)
 
 # Set up the simulator
+# (including any event management)
 simulator = Simulator(
     board=board,
     on_exit_event=coordinator.get_event_handlers(),
@@ -155,7 +152,7 @@ print(
         "***Beginning simulation!",
         color="blue",
         attrs=["bold"],
-    ),
+    )
 )
 
 start_wall_time: Final[float] = time.time()
