@@ -12,7 +12,6 @@ Handle ROIs in a sampled, periodic manner.
 from enum import Enum
 from typing import Any, Final, Optional, override
 
-import m5.stats
 from gem5.simulate.exit_event import ExitEvent
 from termcolor import colored
 
@@ -206,7 +205,7 @@ class PeriodicROIManager(EventManager):
             # ROI -> FF_WORK (or end simulation)
             # Dump ROI stats and switch to FF proc
             if self._current_phase == Phase.ROI:
-                m5.stats.dump()  # type: ignore
+                self.dump_stats()
                 self._completed_rois += 1
 
                 print(
@@ -252,7 +251,7 @@ class PeriodicROIManager(EventManager):
                         )
 
                         # Clear unwanted final stats block
-                        self._coordinator.reset_stats()  # type: ignore
+                        self.reset_stats()
 
                         # End simulation
                         yield True
@@ -275,7 +274,7 @@ class PeriodicROIManager(EventManager):
                 )
 
                 # Reset stats for ROI
-                self._coordinator.reset_stats()  # type: ignore
+                self.reset_stats()
 
                 # Schedule end of ROI interval
                 self._current_phase = Phase.ROI
@@ -342,10 +341,14 @@ class PeriodicROIManager(EventManager):
             self._completed_rois = 0
             print(
                 colored(
-                    f"***{current_ins:,}: Beginning benchmark execution on "
-                    "m5.workbegin."
+                    f"***Instruction {current_ins:,}:",
+                    color="blue",
+                    attrs=["bold"],
                 ),
-                "blue",
+                colored(
+                    "Beginning benchmark execution on m5.workbegin.",
+                    "blue",
+                ),
             )
             if self._init_ff_interval:
                 # Initial fast-forward
@@ -420,7 +423,7 @@ class PeriodicROIManager(EventManager):
                 )
 
                 # Dump stats block
-                m5.stats.dump()  # type: ignore
+                self.dump_stats()
                 self._completed_rois += 1
             if self._current_phase in [Phase.ROI, Phase.WARMUP]:
                 # We're mid-ROI or mid-warmup
@@ -440,7 +443,7 @@ class PeriodicROIManager(EventManager):
             # gem5 will always dump an annoying final stats block when it
             # exits, if any stats have changed since the last block. So,
             # zero it anyway
-            self._coordinator.reset_stats()  # type: ignore
+            self.reset_stats()
             self._current_phase = Phase.NO_WORK
             yield False  # Continue simulation
 

@@ -38,12 +38,12 @@ class SimpleROIManager(EventManager):
 
             print(
                 colored(
-                    f"***instruction {current_ins:,}:",
+                    f"***Instruction {current_ins:,}:",
                     color="blue",
                     attrs=["bold"],
                 ),
                 colored(
-                    "workbegin: Entering ROI, switching to detailed processor.",
+                    "Entering ROI, switching to detailed processor on m5.workbegin.",
                     color="blue",
                 ),
             )
@@ -64,12 +64,12 @@ class SimpleROIManager(EventManager):
 
             print(
                 colored(
-                    f"***Instruction instruction {current_ins:,}",
+                    f"***Instruction {current_ins:,}:",
                     color="blue",
                     attrs=["bold"],
                 ),
                 colored(
-                    "workend: Exiting ROI, switching to fast-forward processor.",
+                    "Exiting ROI, switching to fast-forward processor on m5.workend",
                     color="blue",
                 ),
             )
@@ -89,11 +89,14 @@ class SimpleROIManager(EventManager):
 
         print(
             colored(
-                f"***instruction {current_ins:,}:",
+                f"***Instruction {current_ins:,}:",
                 color="blue",
                 attrs=["bold"],
             ),
-            colored("exit: Exiting simulation.", color="blue"),
+            colored(
+                "Exiting simulation on m5.exit.",
+                color="blue",
+            ),
         )
 
         self.dump_stats()

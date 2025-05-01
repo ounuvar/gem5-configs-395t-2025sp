@@ -1,7 +1,7 @@
 """
-Sample FS config script to simulate a Hello World program on a switchable
-CPU, booting the OS in KVM and then switching to O3 with the Skylake core
-and a 3-level classic cache hierarchy
+Sample FS config script to run a Hello World program with a switchable
+CPU, booting the OS in KVM and then switching to an O3 Skylake processor
+with a three-level classic cache hierarchy
 """
 
 import time
@@ -38,7 +38,7 @@ processor = CustomX86SwitchableProcessor(SwitchCPUCls=SkylakeCPU)
 cache_hierarchy = ThreeLevelClassicHierarchy()
 
 # Create some DRAM
-memory = DualChannelDDR4_2400(size="3GB")
+memory = DualChannelDDR4_2400(size="3GiB")
 
 # Create a board
 board = X86Board(
@@ -77,23 +77,29 @@ print(
 
 start_wall_time: Final[float] = time.time()
 simulator.run()
-total_wall_time: Final[float] = time.time() - start_wall_time
+elapsed_wall_time: Final[float] = time.time() - start_wall_time
+elapsed_instructions: Final[int] = coordinator.get_current_time().instruction or 0
+elapsed_ticks: Final[int] = simulator.get_current_tick()
 
 print(
     colored(
-        "***Simulator exited",
+        f"***Instruction {elapsed_instructions:,}, tick {elapsed_ticks:,}:",
         color="blue",
         attrs=["bold"],
     ),
     colored(
-        f"because {simulator.get_last_exit_event_cause()}",
+        f"Simulator exited because {simulator.get_last_exit_event_cause()}.",
         color="blue",
     ),
 )
 print(
     colored(
-        f"Total wall clock time: {total_wall_time:.2f} s "
-        f"= {(total_wall_time/60):.2f} min",
+        "***Total wall clock time:",
         color="blue",
-    )
+        attrs=["bold"],
+    ),
+    colored(
+        f"{(elapsed_wall_time/60):.2f} min",
+        color="blue",
+    ),
 )
