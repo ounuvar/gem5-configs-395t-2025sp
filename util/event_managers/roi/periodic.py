@@ -449,7 +449,7 @@ class PeriodicROIManager(EventManager):
             # If we are in the middle of a ROI, dump stats
             if self._current_phase == Phase.ROI:
                 self.dump_stats()
-                self.completed_rois += 1
+                self._completed_rois += 1
 
             # Clear unwanted final stats block 
             self.reset_stats()
@@ -482,7 +482,7 @@ class PeriodicROIManager(EventManager):
             # If we are in the middle of a ROI, dump stats
             if self._current_phase == Phase.ROI:
                 self.dump_stats()
-                self.completed_rois += 1
+                self._completed_rois += 1
 
             # Clear unwanted final stats block
             self.reset_stats()
