@@ -22,7 +22,7 @@ from util.event_managers.event_manager import (
     EventManager,
     EventTime,
 )
-from util.string import vprint
+from util.verbose import vprint
 
 DEFAULT_FF_INTERVAL: Final[float] = 1000.0  # M instructions
 DEFAULT_WARMUP_INTERVAL: Final[float] = 200.0  # M instructions
@@ -160,7 +160,6 @@ class PeriodicROIManager(EventManager):
         num_rois: Optional[int] = None,
         continue_sim: Optional[bool] = None,
         start_on_workbegin: Optional[bool] = None,
-        verbose: bool = False,
     ) -> None:
         """Initialize the PeriodicROIManager.
 
@@ -172,9 +171,8 @@ class PeriodicROIManager(EventManager):
         :param continue_sim Whether to continue simulation after ROIs finish
         :param start_on_workbegin Whether to wait for an m5.workbegin event
                                   before ending the initial fast-forward phase.
-        :param verbose Whether to print verbose output
         """
-        super().__init__(verbose=verbose)
+        super().__init__()
 
         self._ff_interval: Final[int] = (
             ff_interval
@@ -441,7 +439,7 @@ class PeriodicROIManager(EventManager):
                     attrs=["bold"],
                 ),
                 colored(
-                    f"Stopping ROIs on m5.workend.",
+                    "Stopping ROIs on m5.workend.",
                     color="blue",
                 ),
             )
@@ -451,13 +449,13 @@ class PeriodicROIManager(EventManager):
                 self.dump_stats()
                 self._completed_rois += 1
 
-            # Clear unwanted final stats block 
+            # Clear unwanted final stats block
             self.reset_stats()
             self._current_phase = Phase.NO_WORK
 
             # Continue simulation
             yield False
-    
+
     def _handle_exit(self) -> EventHandler:
         """Handle exit event, by ending the simulation.
 
@@ -486,10 +484,9 @@ class PeriodicROIManager(EventManager):
 
             # Clear unwanted final stats block
             self.reset_stats()
-            
+
             # End simulation
             yield True
-
 
     @override
     def get_event_handlers(self) -> EventHandlerDict:

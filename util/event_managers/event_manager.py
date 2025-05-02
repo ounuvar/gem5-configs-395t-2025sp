@@ -10,7 +10,7 @@ import m5
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 
-from util.string import vprint
+from util.verbose import vprint
 
 # The type of an event handler. Each time a handler is called, it generates
 # a bool which tells gem5 whether to stop the simulation.
@@ -96,15 +96,12 @@ class EventCoordinator:
     def __init__(
         self,
         event_managers: List["EventManager"],
-        verbose: bool = False,
     ):
         """Initialize the event coordinator.
 
         :param managers List of event managers to coordiante
-        :param verbose Whether to print verbose information
         """
         self._managers: Final[List[EventManager]] = event_managers
-        self._verbose: Final[bool] = verbose
 
         # To be set in register()
         self._simulator: Optional[Simulator] = None
@@ -315,13 +312,10 @@ class EventManager(ABC):
     Child classes must implement get_event_handlers()
     """
 
-    def __init__(self, verbose: bool = False) -> None:
-        """Initialize the event manager.
-
-        :param verbose Whether to print verbose information"""
+    def __init__(self) -> None:
+        """Initialize the event manager."""
         self._coordinator: Optional[EventCoordinator] = None
         self._next_event: EventTime = EventTime()
-        self._verbose: Final[bool] = verbose
 
     @abstractmethod
     def get_event_handlers(self) -> EventHandlerDict:

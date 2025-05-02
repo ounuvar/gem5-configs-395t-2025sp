@@ -29,7 +29,6 @@ requires(isa_required=ISA.X86)
 
 # Parse all command-line args
 simarglib.parse()
-verbose: Final[bool] = False
 
 # Create a processor
 # KVM start core, O3 switch core recommended
@@ -50,8 +49,8 @@ board = X86Board(
 )
 
 # Create ROI managers
-roi_manager = PeriodicROIManager(verbose=verbose)
-coordinator = EventCoordinator([roi_manager], verbose=verbose)
+roi_manager = PeriodicROIManager()
+coordinator = EventCoordinator([roi_manager])
 
 # Set up the workload
 workload = Spec06AndGapFS()

@@ -23,8 +23,8 @@ requires(isa_required=ISA.X86)
 
 # Parse all command-line args
 simarglib.parse()
-verbose: Final[bool] = False
 
+# Create a processor
 # O3 core type recommended
 processor = CustomX86Processor(CPUCls=SkylakeCPU)
 

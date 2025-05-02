@@ -20,11 +20,9 @@ from util.event_managers.event_manager import (
 
 
 class SimpleROIManager(EventManager):
-    def __init__(self, verbose: bool = False) -> None:
-        """Initialize the SimpleROIManager.
-
-        :param verbose: Whether to print verbose information"""
-        super().__init__(verbose=verbose)
+    def __init__(self) -> None:
+        """Initialize the SimpleROIManager."""
+        super().__init__()
 
     def _handle_workbegin(self) -> EventHandler:
         """Handle workbegin event, by switching to the timing processor
