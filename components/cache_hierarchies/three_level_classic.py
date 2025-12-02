@@ -105,7 +105,7 @@ class ThreeLevelClassicHierarchy(AbstractClassicCacheHierarchy):
         # Create an LLC to be shared by all cores
         # and a coherent crossbar for its bus
         self.llcache = LLCache(**self._llc_params)
-        self.llcXbar = L2XBar(width=192, 
+        self.llcXbar = L2XBar(width=192,
                               snoop_filter = SnoopFilter(max_capacity='32MB'))
 
         if board.has_coherent_io():

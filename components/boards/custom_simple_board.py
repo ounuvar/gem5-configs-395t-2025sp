@@ -12,7 +12,7 @@ class CustomSimpleBoard(SimpleBoard):
         # FIXME TODO: Set this appropriately to match the CPU.
         #
         # Hint: gem5 uunderstands text labels, e.g., "800MHz"
-        clk_freq: str = FIXME,
+        clk_freq: str = '4GHz',
         processor=NULL,
         memory=NULL,
         cache_hierarchy=NULL,

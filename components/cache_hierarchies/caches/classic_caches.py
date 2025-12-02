@@ -29,16 +29,16 @@ class L1DCache(Cache):
         # Hints:
         # - gem5 understands text labels, e.g., "8KiB"
         # - To represent no prefetcher, you can use the value NULL.
-        size: str = FIXME,
-        assoc: int = FIXME,
-        tag_latency: int = FIXME,
-        data_latency: int = FIXME,
+        size: str = '32KiB',
+        assoc: int = 8,
+        tag_latency: int = 1,
+        data_latency: int = 3,
         response_latency: int = 1,
-        mshrs: int = FIXME,
+        mshrs: int = 16,
         tgts_per_mshr: int = 16,
-        write_buffers: int = 64,  # Matched to ChampSim default
-        prefetcher: BasePrefetcher = FIXME,
-        replacement_policy: BaseReplacementPolicy = FIXME,
+        write_buffers: int = 8,  # Matched to ChampSim default
+        prefetcher: BasePrefetcher = NULL,
+        replacement_policy: BaseReplacementPolicy = LRURP(),
         # The below should be false if downstream cache is mostly inclusive or if there is no
         # downstream cache, true if downstream cache is mostly exclusive
         writeback_clean: bool = False,
@@ -78,16 +78,16 @@ class L1ICache(Cache):
     def __init__(
         self,
         # FIXME TODO: Set these appropriately.
-        size: str = FIXME,
-        assoc: int =  FIXME,
-        tag_latency: int =  FIXME,
-        data_latency: int = FIXME,
+        size: str = '32KiB',
+        assoc: int =  8,
+        tag_latency: int =  1,
+        data_latency: int = 3,
         response_latency: int = 1,
-        mshrs: int = FIXME,
+        mshrs: int = 8,
         tgts_per_mshr: int = 16,
         write_buffers: int = 8,
-        prefetcher: BasePrefetcher = FIXME,
-        replacement_policy: BaseReplacementPolicy = FIXME,
+        prefetcher: BasePrefetcher = NULL,
+        replacement_policy: BaseReplacementPolicy = LRURP(),
         # The below should be false if downstream cache is mostly inclusive or if there is no
         # downstream cache, true if downstream cache is mostly exclusive
         writeback_clean: bool = False,
@@ -118,7 +118,7 @@ class L1ICache(Cache):
         )
 
 
-""" 
+"""
 L2 cache
 """
 
@@ -127,16 +127,16 @@ class L2Cache(Cache):
     def __init__(
         self,
         # FIXME TODO: Set these appropriately.
-        size: str = FIXME,
-        assoc: int = FIXME,
-        tag_latency: FIXME,
-        data_latency: int = FIXME,
+        size: str = '256KiB',
+        assoc: int = 4,
+        tag_latency: int = 4,
+        data_latency: int = 10,
         response_latency: int = 1,
-        mshrs: int = FIXME,
+        mshrs: int = 32,
         tgts_per_mshr: int = 16,
         write_buffers: int = 32,  # Matched to ChampSim default
-        prefetcher: BasePrefetcher = FIXME,
-        replacement_policy: BaseReplacementPolicy = FIXME,
+        prefetcher: BasePrefetcher = NULL,
+        replacement_policy: BaseReplacementPolicy = LRURP(),
         # The below should be false if downstream cache is mostly inclusive or if there is no
         # downstream cache, true if downstream cache is mostly exclusive
         writeback_clean: bool = False,
@@ -176,17 +176,17 @@ class LLCache(Cache):
     def __init__(
         self,
         # FIXME TODO: Set these appropriately.
-        size: str = FIXME,
-        assoc: int = FIXME,
-        tag_latency: int = FIXME,
-        data_latency: int = FIXME,
+        size: str = '2MiB',
+        assoc: int = 16,
+        tag_latency: int = 8,
+        data_latency: int = 36,
         response_latency: int = 1,
-        mshrs: int = FIXME,
+        mshrs: int = 64,
         tgts_per_mshr: int = 32,
-        write_buffers: int = 128,  # Matched to ChampSim default for 4 cores
+        write_buffers: int = 32,  # Matched to ChampSim default
         # FIXME TODO: Set these appropriately.
-        prefetcher: BasePrefetcher = FIXME,
-        replacement_policy: BaseReplacementPolicy = FIXME,
+        prefetcher: BasePrefetcher = StridePrefetcher(degree=3),
+        replacement_policy: BaseReplacementPolicy = LRURP(), #  TODO: INSERT YOUR POLICY HERE
         # The below should be false if downstream cache is mostly inclusive or if there is no
         # downstream cache, true if downstream cache is mostly exclusive
         writeback_clean: bool = False,
@@ -216,7 +216,7 @@ class LLCache(Cache):
         )
 
 
-""" 
+"""
 Page table entry cache
 (the X86 MMU doesn't support two-level TLBs, but this at least mimics one)
 """
